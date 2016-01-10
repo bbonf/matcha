@@ -1,9 +1,11 @@
 from nose.tools import eq_, assert_is_instance
 
-from matcha.ast import Invocation, Function, Assignment
+from matcha.ast import (Invocation, Function, Assignment,
+    BinaryOperator, IfStatement, Return, Block)
 from matcha.parsing.base import joined, match
 from matcha.parsing import (symbol, atom, invocation, function,
-    oneof, arguments, assignment)
+    oneof, arguments, assignment, binary_operator,
+    if_statement, return_statement)
 
 def full_match(parser, string):
     eq_(parser(string), (string, ''))
@@ -86,6 +88,34 @@ def test_arguments():
     eq_(p('(a,b,c)')[0], ['a','b','c'])
     eq_(p('(a, b, c)')[0], ['a','b','c'])
 
+def test_binary():
+    p = binary_operator()
+    node, r = p('a + b')
+
+    eq_(r, '')
+    assert_is_instance(node, BinaryOperator)
+    eq_(node.first, 'a')
+    eq_(node.operator, '+')
+    eq_(node.second, 'b')
+
+    node, r = p('a + b + c')
+
+    eq_(r, '')
+    assert_is_instance(node, BinaryOperator)
+    eq_(node.first, 'a')
+    eq_(node.operator, '+')
+    eq_(node.second, BinaryOperator('b', '+', 'c'))
+
+    node, r = p('a + b + c + d')
+
+    eq_(r, '')
+    assert_is_instance(node, BinaryOperator)
+    eq_(node.first, 'a')
+    eq_(node.operator, '+')
+    eq_(node.second,
+            BinaryOperator('b', '+',
+                BinaryOperator('c', '+', 'd')))
+
 class TestFunction():
     def test_simple(self):
         p = function(0)
@@ -98,7 +128,7 @@ class TestFunction():
         eq_(node.name, 'test_func')
         eq_(node.args[0], 'arg1')
         eq_(node.args[1], 'arg2')
-        eq_(node.body, [Assignment(src='5', dst='x')])
+        eq_(node.body.body, [Assignment(src='5', dst='x')])
 
     def test_missing_body(self):
         p = function(0)
@@ -107,4 +137,39 @@ class TestFunction():
             None)
 
 
+class TestIfStatement():
+    def test_simple(self):
+        p = if_statement()
+        node, r = p(
+            'if x > 5:\n'
+            '    x = 8')
 
+        eq_(r, '')
+        assert_is_instance(node, IfStatement)
+        eq_(node.expression, BinaryOperator('x', '>', '5'))
+        eq_(node.body.body, [Assignment('8','x')])
+
+    def test_nested(self):
+        p = if_statement()
+        node, r = p(
+            'if x > 5:\n'
+            '    x = 8\n'
+            '    if y == 3:\n'
+            '        y = 0\n')
+
+
+        eq_(r, '')
+        assert_is_instance(node, IfStatement)
+        eq_(node.expression, BinaryOperator('x', '>', '5'))
+        eq_(node.body.body, [Assignment('8','x'),
+            IfStatement(BinaryOperator('y', '==', '3'),
+                Block([Assignment('0', 'y')]))])
+
+
+def test_retrun():
+    p = return_statement()
+    node, r = p('return 5')
+
+    eq_(r, '')
+    assert_is_instance(node, Return)
+    eq_(node.result, '5')
