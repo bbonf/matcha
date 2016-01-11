@@ -1,14 +1,15 @@
 from nose.tools import eq_, assert_is_instance
 
 from matcha.ast import (Invocation, Function, Assignment,
-    BinaryOperator, IfStatement, Return, Block)
+    BinaryOperator, IfStatement, Return, Block, Literal,
+    Symbol)
 from matcha.parsing.base import joined, match
 from matcha.parsing import (symbol, atom, invocation, function,
     oneof, arguments, assignment, binary_operator,
     if_statement, return_statement)
 
-def full_match(parser, string):
-    eq_(parser(string), (string, ''))
+def full_match(parser, string, node=str):
+    eq_(parser(string), (node(string), ''))
 
 def no_match(parser, string):
     eq_(parser(string), None)
@@ -49,19 +50,19 @@ class TestSymbol():
 class TestAtom():
     def test_matches(self):
         p = atom()
-        full_match(p, 'symbol')
-        full_match(p, '"double_quote"')
-        full_match(p, "'single_quote'")
-        full_match(p, "1234")
-        full_match(p, 'dotted.name')
+        full_match(p, 'symbol', Symbol)
+        full_match(p, '"double_quote"', Literal)
+        full_match(p, "'single_quote'", Literal)
+        full_match(p, "1234", Literal)
+        full_match(p, 'dotted.name', Symbol)
 
-        full_match(p, 'a')
+        full_match(p, 'a', Symbol)
 
     def test_fails(self):
         p = atom()
         no_match(p, '{}weird')
         no_match(p, '')
-        eq_(p('more than one'), ('more', 'than one'))
+        eq_(p('more than one'), (Symbol('more'), 'than one'))
 
 class TestInvocation():
     def test_simple(self):
@@ -70,18 +71,20 @@ class TestInvocation():
 
         eq_(r, '')
         assert_is_instance(node, Invocation)
-        eq_(node.func, 'module.func')
-        eq_(node.args[0], 'symbol')
-        eq_(node.args[1], '123')
-        eq_(node.args[2], '"string"')
+        eq_(node.func, Symbol('module.func'))
+        eq_(node.args[0], Symbol('symbol'))
+        eq_(node.args[1], Literal('123'))
+        eq_(node.args[2], Literal('"string"'))
 
 
 def test_assignment():
     p = assignment()
-    eq_(p('x=5')[0], Assignment(src='5', dst='x'))
-    eq_(p('x =5')[0], Assignment(src='5', dst='x'))
-    eq_(p('x= 5')[0], Assignment(src='5', dst='x'))
-    eq_(p('x = 5')[0], Assignment(src='5', dst='x'))
+    five = Literal('5')
+    x = Symbol('x')
+    eq_(p('x=5')[0], Assignment(five, x))
+    eq_(p('x =5')[0], Assignment(five, x))
+    eq_(p('x= 5')[0], Assignment(five, x))
+    eq_(p('x = 5')[0], Assignment(five, x))
 
 def test_arguments():
     p = arguments()
@@ -94,27 +97,31 @@ def test_binary():
 
     eq_(r, '')
     assert_is_instance(node, BinaryOperator)
-    eq_(node.first, 'a')
+    eq_(node.first, Symbol('a'))
     eq_(node.operator, '+')
-    eq_(node.second, 'b')
+    eq_(node.second, Symbol('b'))
 
     node, r = p('a + b + c')
 
     eq_(r, '')
     assert_is_instance(node, BinaryOperator)
-    eq_(node.first, 'a')
+    eq_(node.first, Symbol('a'))
     eq_(node.operator, '+')
-    eq_(node.second, BinaryOperator('b', '+', 'c'))
+    eq_(node.second, BinaryOperator(
+        Symbol('b'), '+', Symbol('c')))
 
     node, r = p('a + b + c + d')
 
     eq_(r, '')
     assert_is_instance(node, BinaryOperator)
-    eq_(node.first, 'a')
+    eq_(node.first, Symbol('a'))
     eq_(node.operator, '+')
     eq_(node.second,
-            BinaryOperator('b', '+',
-                BinaryOperator('c', '+', 'd')))
+            BinaryOperator(Symbol('b'), '+',
+                BinaryOperator(
+                    Symbol('c'),
+                    '+',
+                    Symbol('d'))))
 
 class TestFunction():
     def test_simple(self):
@@ -128,7 +135,8 @@ class TestFunction():
         eq_(node.name, 'test_func')
         eq_(node.args[0], 'arg1')
         eq_(node.args[1], 'arg2')
-        eq_(node.body.body, [Assignment(src='5', dst='x')])
+        eq_(node.body.body, [
+            Assignment(Literal('5'), Symbol('x'))])
 
     def test_missing_body(self):
         p = function(0)
@@ -146,8 +154,10 @@ class TestIfStatement():
 
         eq_(r, '')
         assert_is_instance(node, IfStatement)
-        eq_(node.expression, BinaryOperator('x', '>', '5'))
-        eq_(node.body.body, [Assignment('8','x')])
+        eq_(node.expression,
+            BinaryOperator(Symbol('x'), '>', Literal('5')))
+        eq_(node.body.body, [
+            Assignment(Literal('8'), Symbol('x'))])
 
     def test_nested(self):
         p = if_statement()
@@ -160,10 +170,14 @@ class TestIfStatement():
 
         eq_(r, '')
         assert_is_instance(node, IfStatement)
-        eq_(node.expression, BinaryOperator('x', '>', '5'))
-        eq_(node.body.body, [Assignment('8','x'),
-            IfStatement(BinaryOperator('y', '==', '3'),
-                Block([Assignment('0', 'y')]))])
+        eq_(node.expression,
+            BinaryOperator(Symbol('x'), '>', Literal('5')))
+        eq_(node.body.body, [
+            Assignment(Literal('8'), Symbol('x')),
+            IfStatement(
+                BinaryOperator(Symbol('y'), '==', Literal('3')),
+                Block([Assignment(Literal('0'), Symbol('y'))])
+            )])
 
 
 def test_retrun():
@@ -172,4 +186,4 @@ def test_retrun():
 
     eq_(r, '')
     assert_is_instance(node, Return)
-    eq_(node.result, '5')
+    eq_(node.result, Literal('5'))

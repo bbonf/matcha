@@ -155,7 +155,7 @@ def if_statement():
 
 def assignment():
     return Parser(then(
-        'dst', symbol(),
+        'dst', Parser(symbol(), Symbol),
         '_', rstrip(match('=')),
         'src', atom()), Assignment)
 
