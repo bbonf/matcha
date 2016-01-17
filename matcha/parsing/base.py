@@ -88,19 +88,6 @@ def either(*parsers):
 def oneof(options):
     return either(*map(match, options))
 
-def many_flat(p):
-    m = many(p)
-    def many_flat_parser(text):
-        r = m(text)
-        if r:
-            return ''.join(r[0]), r[1]
-        return None
-
-    return many_flat_parser
-
-def anychar():
-    return p_regex('.')
-
 def wrapped(pre, p, post):
     spec = ['inner', p]
     if pre:
