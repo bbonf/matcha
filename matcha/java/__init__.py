@@ -1,8 +1,11 @@
+import logging
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
                    Invocation, Literal, Return, Symbol)
+from ..ast import Types, infer, resolve_types, is_concrete_type, SymbolType, InferenceError
 
+log = logging.getLogger(__name__)
 
 def join_arguments(args):
     out = []
@@ -14,10 +17,38 @@ def join_arguments(args):
     return ','.join(out)
 
 
+def generate_type(typ):
+    return {
+        Types.Integer: 'int',
+        Types.Double: 'double',
+        Types.String: 'String'
+        }[typ]
+
+
 def generate_function(node):
     body = generate_block(node.body)
-    return ('var %s = function(%s) { %s };' %
-            (node.name, join_arguments(node.args), body))
+    infered_return, constrains = infer(node)
+    resolved = resolve_types(constrains)
+
+    if not is_concrete_type(infered_return):
+        infered_return = resolved[infered_return]
+
+    return_type = generate_type(infered_return)
+
+    args = []
+    for arg in node.args:
+        found = False
+        for constrain in constrains:
+            if SymbolType(arg) in constrain:
+                args.append('%s %s' % (generate_type(resolved[SymbolType(arg)]), arg))
+                found = True
+
+        if not found:
+            raise InferenceError('could not infer type of argument: %s' % arg)
+
+
+    return ('public static %s %s(%s) { %s };' %
+            (return_type, node.name, join_arguments(args), body))
 
 
 def generate_invocation(node):
@@ -46,7 +77,7 @@ def generate_block(node):
 
 
 def generate_return(node):
-    return 'return %s' % generate(node.result)
+    return 'return %s;' % generate(node.result)
 
 
 def generate_literal(node):
@@ -76,6 +107,21 @@ def generate(node):
         raise RuntimeError('unknown node: %r' % (node,))
 
 
+def generate_program(ast):
+    definitions = []
+    main = []
+
+    for node in ast.body:
+        if type(node) == Function:
+            definitions.append(node)
+        else:
+            main.append(node)
+
+    return '\n'.join(generate(d) for d in definitions) + \
+        'public static void matcha_main() { %s; }' % \
+        ';\n'.join(generate(x) for x in main)
+
+
 def bootstrap():
-    with open(os.path.join(os.path.dirname(__file__), 'bootstrap.js')) as f:
+    with open(os.path.join(os.path.dirname(__file__), 'bootstrap.java')) as f:
         return f.read()

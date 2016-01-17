@@ -59,7 +59,7 @@ def string_literal():
     return either(p_regex('".*"'), p_regex("'.*'"))
 
 def numeric_literal():
-    return p_regex(r'\d+')
+    return p_regex(r'\d+(\.\d*)?')
 
 def literal():
     return Parser(
