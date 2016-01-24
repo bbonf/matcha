@@ -8,6 +8,7 @@ BinaryOperator = namedtuple(
 IfStatement = namedtuple('IfStatement', 'expression,body')
 Block = namedtuple('Block', 'body')
 Return = namedtuple('Return', 'result')
-Literal = namedtuple('Literal', 'value')
 Symbol = namedtuple('Symbol', 'name')
 
+Literal = namedtuple('Literal', 'value')
+ListLiteral = namedtuple('ListLiteral', 'value')

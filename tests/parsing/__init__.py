@@ -2,14 +2,17 @@ from nose.tools import eq_, assert_is_instance
 
 from matcha.ast import (Invocation, Function, Assignment,
     BinaryOperator, IfStatement, Return, Block, Literal,
-    Symbol)
+    Symbol, ListLiteral)
 from matcha.parsing.base import joined, match
 from matcha.parsing import (symbol, atom, invocation, function,
     oneof, arguments, assignment, binary_operator,
-    if_statement, return_statement)
+    if_statement, return_statement, literal)
 
-def full_match(parser, string, node=str):
-    eq_(parser(string), (node(string), ''))
+def full_match(parser, string, node=None):
+    if node:
+        eq_(parser(string), (node, ''))
+    else:
+        eq_(parser(string), (string, ''))
 
 def no_match(parser, string):
     eq_(parser(string), None)
@@ -50,13 +53,13 @@ class TestSymbol():
 class TestAtom():
     def test_matches(self):
         p = atom()
-        full_match(p, 'symbol', Symbol)
-        full_match(p, '"double_quote"', Literal)
-        full_match(p, "'single_quote'", Literal)
-        full_match(p, "1234", Literal)
-        full_match(p, 'dotted.name', Symbol)
+        full_match(p, 'symbol', Symbol('symbol'))
+        full_match(p, '"double_quote"', Literal('"double_quote"'))
+        full_match(p, "'single_quote'", Literal("'single_quote'"))
+        full_match(p, "1234", Literal('1234'))
+        full_match(p, 'dotted.name', Symbol('dotted.name'))
 
-        full_match(p, 'a', Symbol)
+        full_match(p, 'a', Symbol('a'))
 
     def test_fails(self):
         p = atom()
@@ -187,3 +190,10 @@ def test_retrun():
     eq_(r, '')
     assert_is_instance(node, Return)
     eq_(node.result, Literal('5'))
+
+def test_list_literal():
+    p = literal()
+
+    full_match(p, '[1,2,3]', ListLiteral(
+        [Literal(x) for x in ['1','2','3']]))
+

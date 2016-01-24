@@ -4,7 +4,7 @@ import logging
 from matcha.parsing import program
 from matcha.js import bootstrap as bootstrap_js
 from matcha.js import generate as generate_js
-from matcha.java import bootstrap as bootstrap_java
+from matcha.java import bootstrap as bootstrap_java, bootstrap_imports
 from matcha.java import generate_program as generate_java
 
 log = logging.getLogger()
@@ -40,6 +40,7 @@ def main(args):
         print(bootstrap_js())
         print(generate_js(ast))
     elif language == 'java':
+        print(bootstrap_imports())
         print('public class Program {')
         print(bootstrap_java())
         print(generate_java(ast))

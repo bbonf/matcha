@@ -2,7 +2,7 @@ from .base import (then, either, many, p_regex, match,
     strip, rstrip, joined, joined_skip, flat, wrapped, then_all, ParsingException,
     oneof)
 from ..ast import (Function, Invocation, Assignment, BinaryOperator,
-    IfStatement, Block, Return, Literal, Symbol)
+    IfStatement, Block, Return, Literal, ListLiteral, Symbol)
 
 import logging
 log = logging.getLogger(__name__)
@@ -61,10 +61,18 @@ def string_literal():
 def numeric_literal():
     return p_regex(r'\d+(\.\d*)?')
 
+def list_literal():
+    return wrapped(
+        match('['),
+        joined_skip(match(','), strip(expression())),
+        match(']'))
+
 def literal():
-    return Parser(
-        either(string_literal(), numeric_literal()),
-        Literal)
+    return either(
+            Parser(
+                either(string_literal(), numeric_literal()),
+                Literal),
+            Parser(list_literal(), ListLiteral))
 
 def atom():
     return rstrip(either(dotted_name(), literal()))

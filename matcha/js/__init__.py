@@ -1,7 +1,7 @@
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-                   Invocation, Literal, Return, Symbol)
+   Invocation, Literal, Return, Symbol, ListLiteral)
 
 
 def join_arguments(args):
@@ -53,6 +53,10 @@ def generate_literal(node):
     return node.value
 
 
+def generate_list_literal(node):
+    return '[%s]' % ','.join(generate(x) for x in node.value)
+
+
 def generate_symbol(node):
     return node.name
 
@@ -67,6 +71,7 @@ def generate(node):
         Block: generate_block,
         Return: generate_return,
         Literal: generate_literal,
+        ListLiteral: generate_list_literal,
         Symbol: generate_symbol,
         }
 

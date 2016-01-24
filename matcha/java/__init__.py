@@ -2,7 +2,7 @@ import logging
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-    Invocation, Literal, Return, Symbol)
+    Invocation, Literal, Return, Symbol, ListLiteral)
 from ..ast.inference import (Types, infer, resolve_types, is_concrete_type,
     SymbolType, InferenceError)
 
@@ -85,6 +85,11 @@ def generate_literal(node):
     return node.value
 
 
+def generate_list_literal(node):
+    return 'Arrays.asList(%s)' % (
+        ','.join(map(generate, node.value)))
+
+
 def generate_symbol(node):
     return node.name
 
@@ -99,6 +104,7 @@ def generate(node):
         Block: generate_block,
         Return: generate_return,
         Literal: generate_literal,
+        ListLiteral: generate_list_literal,
         Symbol: generate_symbol,
         }
 
@@ -126,3 +132,9 @@ def generate_program(ast):
 def bootstrap():
     with open(os.path.join(os.path.dirname(__file__), 'bootstrap.java')) as f:
         return f.read()
+
+def bootstrap_imports():
+    return '\n'.join(
+        'import %s;' % package for package in [
+            'java.util.Arrays',
+            'java.util.stream.Collectors'])
