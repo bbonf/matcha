@@ -26,7 +26,11 @@ def parse(text):
 
 
 def main(args):
-    ast = parse(open(args[-1]).read())
+    if args[-1] == '-':
+        ast = parse(sys.stdin.read())
+    else:
+        ast = parse(open(args[-1]).read())
+
     if args[0] == '--ast':
         log.info(ast)
 
