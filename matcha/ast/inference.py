@@ -93,6 +93,10 @@ def is_concrete_type(typ):
 def resolve_types(constrains):
     out = {}
     for constrain in constrains:
+        if len(set(constrain)) == 1:
+            # type is equal to itself
+            continue
+
         types = set(filter(is_concrete_type, constrain))
         if len(types) > 1:
             raise InferenceError('cannot solve constrain %s' % ','.join(map(str, constrain)))

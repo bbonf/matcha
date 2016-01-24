@@ -26,7 +26,9 @@ def generate_invocation(node):
 
 
 def generate_assignment(node):
-    return ('%s = %s;' % (node.dst, generate(node.src)))
+    assert type(node.dst) == Symbol
+
+    return ('%s = %s;' % (node.dst.name, generate(node.src)))
 
 
 def generate_binary_operator(node):
