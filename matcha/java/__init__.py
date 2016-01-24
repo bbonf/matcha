@@ -2,8 +2,9 @@ import logging
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-                   Invocation, Literal, Return, Symbol)
-from ..ast import Types, infer, resolve_types, is_concrete_type, SymbolType, InferenceError
+    Invocation, Literal, Return, Symbol)
+from ..ast.inference import (Types, infer, resolve_types, is_concrete_type,
+    SymbolType, InferenceError)
 
 log = logging.getLogger(__name__)
 

@@ -1,8 +1,8 @@
 from nose.tools import eq_, raises
 
-from matcha.ast import Literal, Return, Types, BinaryOperator, Symbol
-from matcha.ast import (infer_literal, infer_return, infer_function, infer_binary_operator,
-    InferenceError, SymbolType, resolve_types)
+from matcha.ast import Literal, Return, BinaryOperator, Symbol
+from matcha.ast.inference import (Types, infer_literal, infer_return,
+    infer_function, infer_binary_operator, InferenceError, SymbolType, resolve_types)
 from matcha.parsing import function
 
 
