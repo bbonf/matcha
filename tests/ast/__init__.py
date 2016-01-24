@@ -25,7 +25,8 @@ def test_infer_return():
 def test_infer_binary():
     binary = BinaryOperator(Literal('2'), '+', Literal('5'))
 
-    eq_(infer_binary_operator(binary), (Types.Integer, set()))
+    eq_(infer_binary_operator(binary),
+        (Types.Integer, {(Types.Integer, Types.Integer)}))
 
 
     binary = BinaryOperator(Literal('2'), '+', Symbol('hello'))

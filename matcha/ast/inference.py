@@ -5,7 +5,7 @@ from itertools import filterfalse
 from . import (Function, Literal, Return, IfStatement, Invocation, Assignment,
     Symbol, BinaryOperator, Block)
 
-Types = Enum('Types', 'Integer, Double, String')
+Types = Enum('Types', 'Integer, Double, String, Boolean')
 SymbolType = namedtuple('SymbolType', 'name')
 
 class InferenceError(Exception):
@@ -39,8 +39,13 @@ def infer_binary_operator(node):
     type_a, _ = infer(node.first)
     type_b, _ = infer(node.second)
 
-    if type_a == type_b:
-        return type_a, set()
+    if node.operator in {'==', '<', '>', '!=', '<=', '>='}:
+        return Types.Boolean, set([(type_a, type_b)])
+
+    if node.operator in {'and', 'or', 'not'}:
+        return Types.Boolean, set([
+            (Types.Boolean, type_a),
+            (Types.Boolean, type_b)])
 
     return type_a, set([(type_a, type_b)])
 
