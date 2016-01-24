@@ -132,12 +132,14 @@ def joined(by, part):
 
     return joined_parser
 
-def joined_skip(by, part):
+def joined_skip(by, part, empty_valid=True):
     def joined_skip_parser(text):
         r = joined(by, part)(text)
         if r:
             return r[0][::2], r[1]
 
+        if empty_valid:
+            return [], text
         return None
     return joined_skip_parser
 

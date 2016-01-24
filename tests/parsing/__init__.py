@@ -79,6 +79,15 @@ class TestInvocation():
         eq_(node.args[1], Literal('123'))
         eq_(node.args[2], Literal('"string"'))
 
+    def test_no_arguments(self):
+        p = invocation()
+        node, r = p('module.func()')
+
+        eq_(r, '')
+        assert_is_instance(node, Invocation)
+        eq_(node.func, Symbol('module.func'))
+        eq_(node.args, [])
+
 
 def test_assignment():
     p = assignment()
@@ -146,6 +155,18 @@ class TestFunction():
         eq_(p(
             'def test_func(arg1, arg2):\n(!)@#!('),
             None)
+
+    def test_no_arguments(self):
+        p = function(0)
+        node, r = p(
+            'def just_five():\n'
+            '    return 5')
+
+        eq_(node.name, 'just_five')
+        eq_(node.args, [])
+        eq_(node.body.body, [
+            Return(Literal('5'))])
+
 
 
 class TestIfStatement():
