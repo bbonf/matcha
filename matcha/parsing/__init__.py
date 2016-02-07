@@ -120,18 +120,16 @@ def invocation():
         'func', dotted_name(),
         'args', invocation_arguments()), Invocation)
 
-memo = {}
-def placeholder(f):
+def placeholder(f, z):
+    memo = {}
     def load(*args):
-        return f()(*args)
+        return memo.setdefault((f,z), f(*z))(*args)
 
     return load
 
 def memoize(f):
-    if not f in memo:
-        memo[f] = placeholder(f)
     def helper(*args):
-        return memo[f]
+        return placeholder(f, args)
     return helper
 
 @memoize
