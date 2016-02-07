@@ -115,18 +115,19 @@ def joined(by, part):
     def joined_parser(text):
         out = []
         r = part(text)
+        expect = by
         while r:
             out.append(r[0])
             text = r[1]
-            r = by(text)
+            r = expect(text)
             if not r:
                 break
 
-            out.append(r[0])
-            text = r[1]
-            r = part(text)
+            expect = part if expect == by else by
 
         if out:
+            if expect == part:
+                return out[:-1], text
             return out, text
         return None
 

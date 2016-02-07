@@ -22,6 +22,7 @@ class TestJoined():
         p = joined(match(','), match('a'))
         eq_(p('a,a'), (['a', ',', 'a'], ''))
         eq_(p('a.a'), (['a'], '.a'))
+        eq_(p('a,a,'), (['a', ',', 'a'], ''))
 
 class TestOneof():
     def test_oneof(self):
