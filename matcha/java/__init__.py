@@ -22,7 +22,8 @@ def generate_type(typ):
     return {
         Types.Integer: 'int',
         Types.Double: 'double',
-        Types.String: 'String'
+        Types.String: 'String',
+        Types.List: 'List'
         }[typ]
 
 
@@ -136,5 +137,6 @@ def bootstrap():
 def bootstrap_imports():
     return '\n'.join(
         'import %s;' % package for package in [
+            'java.util.List',
             'java.util.Arrays',
             'java.util.stream.Collectors'])

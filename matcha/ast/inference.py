@@ -3,9 +3,9 @@ from enum import Enum
 from itertools import filterfalse
 
 from . import (Function, Literal, Return, IfStatement, Invocation, Assignment,
-    Symbol, BinaryOperator, Block)
+    Symbol, BinaryOperator, Block, ListLiteral)
 
-Types = Enum('Types', 'Integer, Double, String, Boolean')
+Types = Enum('Types', 'Integer, Double, String, Boolean, List')
 SymbolType = namedtuple('SymbolType', 'name')
 
 class InferenceError(Exception):
@@ -87,8 +87,14 @@ def infer_if_statement(node):
 
     return t, constrains
 
+
+def infer_list(node):
+    return Types.List, set()
+
+
 def is_concrete_type(typ):
     return isinstance(typ, Types)
+
 
 def resolve_types(constrains):
     out = {}
@@ -118,7 +124,8 @@ def infer(node, known={}):
         Assignment: infer_assignment,
         BinaryOperator: infer_binary_operator,
         Block: infer_block,
-        IfStatement: infer_if_statement
+        IfStatement: infer_if_statement,
+        ListLiteral: infer_list
         }
 
     default = lambda node: None
