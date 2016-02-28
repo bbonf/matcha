@@ -56,7 +56,7 @@ def dotted_name():
         Symbol)
 
 def string_literal():
-    return either(p_regex('".*"'), p_regex("'.*'"))
+    return either(p_regex('".*?"'), p_regex("'.*?'"))
 
 def numeric_literal():
     return p_regex(r'\d+(\.\d*)?')
