@@ -2,6 +2,7 @@ import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
    Invocation, Literal, Return, Symbol, ListLiteral)
+from ..ast.inference import infer, SymbolType, resolve_types, is_concrete_type, InferenceError
 
 
 def join_arguments(args):
@@ -14,10 +15,45 @@ def join_arguments(args):
     return ','.join(out)
 
 
+def generate_block_symbols(node, exclude=()):
+    infered_return, constrains = infer(node)
+    resolved = resolve_types(constrains)
+
+    local_symbols = []
+    for t in resolved:
+        if type(t) == SymbolType and not t.name in exclude:
+            local_symbols.append('var %s;' % t.name)
+
+    return '\n'.join(local_symbols)
+
+
 def generate_function(node):
     body = generate_block(node.body)
-    return ('var %s = function(%s) { %s };' %
-            (node.name, join_arguments(node.args), body))
+    infered_return, constrains = infer(node)
+    resolved = resolve_types(constrains)
+
+    if not is_concrete_type(infered_return):
+        infered_return = resolved[infered_return]
+
+    args = {}
+    for arg in node.args:
+        found = False
+        for constrain in constrains:
+            if SymbolType(arg) in constrain:
+                args[arg] = resolved[SymbolType(arg)]
+                found = True
+
+        if not found:
+            raise InferenceError('could not infer type of argument: %s' % arg)
+
+    args_generated = []
+    for arg, type_ in args.items():
+        args_generated.append('%s %s' % (type_, arg))
+
+    exclude_symbols = set([node.name]).union(args)
+    return ('var %s = function(%s) { %s\n%s };' %
+            (node.name, join_arguments(node.args),
+                generate_block_symbols(node, exclude=exclude_symbols), body))
 
 
 def generate_invocation(node):

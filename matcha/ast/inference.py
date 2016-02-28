@@ -56,15 +56,17 @@ def infer_return(node):
     return infer(node.result)
 
 def infer_assignment(node):
-    return infer(node.src)
+    type_a, _ = infer(node.src)
+    type_b, _ = infer(node.dst)
+    return infer(node.src), {(type_a, type_b)}
 
 def infer_block(node):
     types = set()
     constrains = set()
 
     for statement in node.body:
+        t, cs = infer(statement)
         if type(statement) in (Return, IfStatement):
-            t, cs = infer(statement)
             types.add(t)
 
         for c in cs:

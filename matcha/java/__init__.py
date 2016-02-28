@@ -1,6 +1,8 @@
 import logging
 import os
 
+from itertools import chain
+
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
     Invocation, Literal, Return, Symbol, ListLiteral)
 from ..ast.inference import (Types, infer, resolve_types, is_concrete_type,
@@ -27,6 +29,18 @@ def generate_type(typ):
         }[typ]
 
 
+def generate_block_symbols(node, exclude=()):
+    infered_return, constrains = infer(node)
+    resolved = resolve_types(constrains)
+
+    local_symbols = []
+    for t in resolved:
+        if type(t) == SymbolType and not t.name in exclude:
+            local_symbols.append('%s %s;' % (generate_type(resolved[t]), t.name))
+
+    return '\n'.join(local_symbols)
+
+
 def generate_function(node):
     body = generate_block(node.body)
     infered_return, constrains = infer(node)
@@ -37,20 +51,25 @@ def generate_function(node):
 
     return_type = generate_type(infered_return)
 
-    args = []
+    args = {}
     for arg in node.args:
         found = False
         for constrain in constrains:
             if SymbolType(arg) in constrain:
-                args.append('%s %s' % (generate_type(resolved[SymbolType(arg)]), arg))
+                args[arg] = generate_type(resolved[SymbolType(arg)])
                 found = True
 
         if not found:
             raise InferenceError('could not infer type of argument: %s' % arg)
 
+    args_generated = []
+    for arg, type_ in args.items():
+        args_generated.append('%s %s' % (type_, arg))
 
-    return ('public static %s %s(%s) { %s };' %
-            (return_type, node.name, join_arguments(args), body))
+    exclude_symbols = set([node.name]).union(args)
+    return ('public static %s %s(%s) { %s\n%s };' %
+            (return_type, node.name, join_arguments(args_generated),
+                generate_block_symbols(node, exclude=exclude_symbols), body))
 
 
 def generate_invocation(node):
@@ -59,7 +78,7 @@ def generate_invocation(node):
 
 
 def generate_assignment(node):
-    return ('%s = %s;' % (node.dst, generate(node.src)))
+    return ('%s = %s;' % (node.dst.name, generate(node.src)))
 
 
 def generate_binary_operator(node):
@@ -125,9 +144,11 @@ def generate_program(ast):
         else:
             main.append(node)
 
+    symbols = ''.join(generate_block_symbols(m) for m in main)
+
     return '\n'.join(generate(d) for d in definitions) + \
-        'public static void matcha_main() { %s; }' % \
-        ';\n'.join(generate(x) for x in main)
+        'public static void matcha_main() { %s\n%s; }' % \
+        (symbols, ';\n'.join(generate(x) for x in main))
 
 
 def bootstrap():
