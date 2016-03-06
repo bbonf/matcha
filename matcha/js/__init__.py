@@ -1,7 +1,8 @@
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-   Invocation, NumericLiteral, StringLiteral, Return, Symbol, ListLiteral)
+   Invocation, NumericLiteral, StringLiteral, Return, Symbol, ListLiteral,
+   Import)
 from ..ast.inference import infer, SymbolType, resolve_types, is_concrete_type, InferenceError
 
 
@@ -51,9 +52,11 @@ def generate_function(node):
         args_generated.append('%s %s' % (type_, arg))
 
     exclude_symbols = set([node.name]).union(args)
-    return ('var %s = function(%s) { %s\n%s };' %
-            (node.name, join_arguments(node.args),
-                generate_block_symbols(node, exclude=exclude_symbols), body))
+    return ('var {name} = function({args}) {{ {symbols}\n{body} }};'
+            'exports.{name} = {name}'.format(
+                name=node.name, args=join_arguments(node.args),
+                symbols=generate_block_symbols(node, exclude=exclude_symbols),
+                body=body))
 
 
 def generate_invocation(node):
@@ -98,6 +101,10 @@ def generate_list_literal(node):
 def generate_symbol(node):
     return node.name
 
+def generate_import(node):
+    return "var %s = require('./%s.js');" % (
+        node.name.name, node.name.name)
+
 
 def generate(node):
     generators = {
@@ -112,6 +119,7 @@ def generate(node):
         NumericLiteral: generate_literal,
         ListLiteral: generate_list_literal,
         Symbol: generate_symbol,
+        Import: generate_import
         }
 
     try:

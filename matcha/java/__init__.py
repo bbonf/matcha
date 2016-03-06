@@ -1,10 +1,12 @@
 import logging
 import os
 
-from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-    Invocation, NumericLiteral, StringLiteral, Return, Symbol, ListLiteral)
-from ..ast.inference import (Types, infer, resolve_types, is_concrete_type,
-    SymbolType, InferenceError)
+from ..ast import (
+    Assignment, BinaryOperator, Block, Function, IfStatement, Import,
+    Invocation, ListLiteral, NumericLiteral, Return, StringLiteral,
+    Symbol)
+from ..ast.inference import (
+    InferenceError, SymbolType, Types, infer, is_concrete_type, resolve_types)
 
 log = logging.getLogger(__name__)
 
@@ -144,7 +146,7 @@ def generate_program(ast):
     for node in ast.body:
         if type(node) == Function:
             definitions.append(node)
-        else:
+        elif type(node) != Import:
             main.append(node)
 
     symbols = ''.join(generate_block_symbols(m) for m in main)

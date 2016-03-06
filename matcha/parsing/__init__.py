@@ -1,11 +1,13 @@
-from .base import (then, either, many, p_regex, match,
-    strip, rstrip, joined, joined_skip, flat, wrapped, then_all, ParsingException,
-    oneof)
-from ..ast import (Function, Invocation, Assignment, BinaryOperator,
-    IfStatement, Block, Return, NumericLiteral, StringLiteral,
-    ListLiteral, Symbol)
-
 import logging
+
+from ..ast import (
+    Assignment, BinaryOperator, Block, Function, IfStatement, Import,
+    Invocation, ListLiteral, NumericLiteral, Return, StringLiteral,
+    Symbol)
+from .base import (
+    ParsingException, either, flat, joined, joined_skip, many, match, oneof,
+    p_regex, rstrip, strip, then, then_all, wrapped)
+
 log = logging.getLogger(__name__)
 
 def trace(p):
@@ -191,6 +193,13 @@ def function(level):
             '_', end_def(),
             'body', block()), Function)
 
+def import_():
+    return Parser(
+        then_all(
+            '_', match('import '),
+            'name', dotted_name()), Import)
+
+
 def definition(level=0):
     return either(function(level))
 
@@ -198,5 +207,9 @@ def program():
     return Parser(
         then(
             'body',
-            many(rstrip(either(empty_line(), definition(), statement())))),
+            many(rstrip(either(
+                empty_line(),
+                import_(),
+                definition(),
+                statement())))),
         Block)
