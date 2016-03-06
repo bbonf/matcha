@@ -10,5 +10,6 @@ Block = namedtuple('Block', 'body')
 Return = namedtuple('Return', 'result')
 Symbol = namedtuple('Symbol', 'name')
 
-Literal = namedtuple('Literal', 'value')
+NumericLiteral = namedtuple('NumericLiteral', 'value')
+StringLiteral = namedtuple('StringLiteral', 'value')
 ListLiteral = namedtuple('ListLiteral', 'value')

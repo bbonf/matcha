@@ -1,7 +1,7 @@
 import os
 
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-   Invocation, Literal, Return, Symbol, ListLiteral)
+   Invocation, NumericLiteral, StringLiteral, Return, Symbol, ListLiteral)
 from ..ast.inference import infer, SymbolType, resolve_types, is_concrete_type, InferenceError
 
 
@@ -108,7 +108,8 @@ def generate(node):
         IfStatement: generate_if_statement,
         Block: generate_block,
         Return: generate_return,
-        Literal: generate_literal,
+        StringLiteral: generate_literal,
+        NumericLiteral: generate_literal,
         ListLiteral: generate_list_literal,
         Symbol: generate_symbol,
         }

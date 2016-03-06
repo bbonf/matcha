@@ -2,7 +2,8 @@ from .base import (then, either, many, p_regex, match,
     strip, rstrip, joined, joined_skip, flat, wrapped, then_all, ParsingException,
     oneof)
 from ..ast import (Function, Invocation, Assignment, BinaryOperator,
-    IfStatement, Block, Return, Literal, ListLiteral, Symbol)
+    IfStatement, Block, Return, NumericLiteral, StringLiteral,
+    ListLiteral, Symbol)
 
 import logging
 log = logging.getLogger(__name__)
@@ -69,9 +70,8 @@ def list_literal():
 
 def literal():
     return either(
-            Parser(
-                either(string_literal(), numeric_literal()),
-                Literal),
+            Parser(string_literal(), StringLiteral),
+            Parser(numeric_literal(), NumericLiteral),
             Parser(list_literal(), ListLiteral))
 
 def atom():

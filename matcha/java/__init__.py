@@ -1,10 +1,8 @@
 import logging
 import os
 
-from itertools import chain
-
 from ..ast import (Assignment, BinaryOperator, Block, Function, IfStatement,
-    Invocation, Literal, Return, Symbol, ListLiteral)
+    Invocation, NumericLiteral, StringLiteral, Return, Symbol, ListLiteral)
 from ..ast.inference import (Types, infer, resolve_types, is_concrete_type,
     SymbolType, InferenceError)
 
@@ -101,7 +99,11 @@ def generate_return(node):
     return 'return %s;' % generate(node.result)
 
 
-def generate_literal(node):
+def generate_string_literal(node):
+    return '"' + node.value[1:-1]  + '"'
+
+
+def generate_numeric_literal(node):
     return node.value
 
 
@@ -123,7 +125,8 @@ def generate(node):
         IfStatement: generate_if_statement,
         Block: generate_block,
         Return: generate_return,
-        Literal: generate_literal,
+        NumericLiteral: generate_numeric_literal,
+        StringLiteral: generate_string_literal,
         ListLiteral: generate_list_literal,
         Symbol: generate_symbol,
         }

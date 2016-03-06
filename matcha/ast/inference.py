@@ -2,7 +2,8 @@ from collections import namedtuple
 from enum import Enum
 from itertools import filterfalse
 
-from . import (Function, Literal, Return, IfStatement, Invocation, Assignment,
+from . import (Function, NumericLiteral, StringLiteral,
+    Return, IfStatement, Invocation, Assignment,
     Symbol, BinaryOperator, Block, ListLiteral)
 
 Types = Enum('Types', 'Integer, Double, String, Boolean, List')
@@ -26,12 +27,14 @@ def infer_symbol(node):
     return SymbolType(node.name), set()
 
 
-def infer_literal(node):
+def infer_numeric_literal(node):
     if node.value.replace('.', '').isdigit():
         if '.' in node.value:
             return Types.Double, set()
         return Types.Integer, set()
 
+
+def infer_string_literal(node):
     return Types.String, set()
 
 
@@ -120,7 +123,8 @@ def infer(node, known={}):
     infers = {
         Function: infer_function,
         Return: infer_return,
-        Literal: infer_literal,
+        NumericLiteral: infer_numeric_literal,
+        StringLiteral: infer_string_literal,
         Symbol: infer_symbol,
         Invocation: infer_invocation,
         Assignment: infer_assignment,

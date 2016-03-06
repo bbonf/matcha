@@ -1,35 +1,36 @@
 from nose.tools import eq_, raises
 
-from matcha.ast import Literal, Return, BinaryOperator, Symbol
-from matcha.ast.inference import (Types, infer_literal, infer_return,
-    infer_function, infer_binary_operator, InferenceError, SymbolType, resolve_types)
+from matcha.ast import StringLiteral, NumericLiteral, Return, BinaryOperator, Symbol
+from matcha.ast.inference import (Types, infer_numeric_literal, infer_string_literal,
+    infer_return, infer_function, infer_binary_operator, InferenceError, SymbolType,
+    resolve_types)
 from matcha.parsing import function
 
 
 def test_infer_literal():
-    integer = Literal('2')
-    double = Literal('2.4')
-    string = Literal('hello')
+    integer = NumericLiteral('2')
+    double = NumericLiteral('2.4')
+    string = StringLiteral('hello')
 
-    eq_(infer_literal(integer), (Types.Integer, set()))
-    eq_(infer_literal(double), (Types.Double, set()))
-    eq_(infer_literal(string), (Types.String, set()))
+    eq_(infer_numeric_literal(integer), (Types.Integer, set()))
+    eq_(infer_numeric_literal(double), (Types.Double, set()))
+    eq_(infer_string_literal(string), (Types.String, set()))
 
 
 def test_infer_return():
-    ret = Return(Literal('2'))
+    ret = Return(NumericLiteral('2'))
 
     eq_(infer_return(ret), (Types.Integer, set()))
 
 
 def test_infer_binary():
-    binary = BinaryOperator(Literal('2'), '+', Literal('5'))
+    binary = BinaryOperator(NumericLiteral('2'), '+', NumericLiteral('5'))
 
     eq_(infer_binary_operator(binary),
         (Types.Integer, {(Types.Integer, Types.Integer)}))
 
 
-    binary = BinaryOperator(Literal('2'), '+', Symbol('hello'))
+    binary = BinaryOperator(NumericLiteral('2'), '+', Symbol('hello'))
 
     eq_(infer_binary_operator(binary),
         (Types.Integer, {(Types.Integer, SymbolType('hello'))}))

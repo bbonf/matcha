@@ -7,6 +7,7 @@ from matcha.js import generate as generate_js
 from matcha.java import bootstrap as bootstrap_java, bootstrap_imports
 from matcha.java import generate_program as generate_java
 
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
 
@@ -46,6 +47,9 @@ def main(args):
         print(generate_java(ast))
         print('public static void main(String[] args) { matcha_main(); }')
         print('}')
+    else:
+        print('unkonwn backend: %s' % language)
+        sys.exit(1)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

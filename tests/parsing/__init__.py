@@ -1,8 +1,8 @@
 from nose.tools import eq_, assert_is_instance
 
 from matcha.ast import (Invocation, Function, Assignment,
-    BinaryOperator, IfStatement, Return, Block, Literal,
-    Symbol, ListLiteral)
+    BinaryOperator, IfStatement, Return, Block, NumericLiteral,
+    StringLiteral, Symbol, ListLiteral)
 from matcha.parsing.base import joined, match
 from matcha.parsing import (symbol, atom, invocation, function,
     oneof, arguments, assignment, binary_operator,
@@ -55,9 +55,9 @@ class TestAtom():
     def test_matches(self):
         p = atom()
         full_match(p, 'symbol', Symbol('symbol'))
-        full_match(p, '"double_quote"', Literal('"double_quote"'))
-        full_match(p, "'single_quote'", Literal("'single_quote'"))
-        full_match(p, "1234", Literal('1234'))
+        full_match(p, '"double_quote"', StringLiteral('"double_quote"'))
+        full_match(p, "'single_quote'", StringLiteral("'single_quote'"))
+        full_match(p, '1234', NumericLiteral('1234'))
         full_match(p, 'dotted.name', Symbol('dotted.name'))
 
         full_match(p, 'a', Symbol('a'))
@@ -77,8 +77,8 @@ class TestInvocation():
         assert_is_instance(node, Invocation)
         eq_(node.func, Symbol('module.func'))
         eq_(node.args[0], Symbol('symbol'))
-        eq_(node.args[1], Literal('123'))
-        eq_(node.args[2], Literal('"string"'))
+        eq_(node.args[1], NumericLiteral('123'))
+        eq_(node.args[2], StringLiteral('"string"'))
 
     def test_no_arguments(self):
         p = invocation()
@@ -92,7 +92,7 @@ class TestInvocation():
 
 def test_assignment():
     p = assignment()
-    five = Literal('5')
+    five = NumericLiteral('5')
     x = Symbol('x')
     eq_(p('x=5')[0], Assignment(five, x))
     eq_(p('x =5')[0], Assignment(five, x))
@@ -149,7 +149,7 @@ class TestFunction():
         eq_(node.args[0], 'arg1')
         eq_(node.args[1], 'arg2')
         eq_(node.body.body, [
-            Assignment(Literal('5'), Symbol('x'))])
+            Assignment(NumericLiteral('5'), Symbol('x'))])
 
     def test_missing_body(self):
         p = function(0)
@@ -166,7 +166,7 @@ class TestFunction():
         eq_(node.name, 'just_five')
         eq_(node.args, [])
         eq_(node.body.body, [
-            Return(Literal('5'))])
+            Return(NumericLiteral('5'))])
 
 
 
@@ -180,9 +180,9 @@ class TestIfStatement():
         eq_(r, '')
         assert_is_instance(node, IfStatement)
         eq_(node.expression,
-            BinaryOperator(Symbol('x'), '>', Literal('5')))
+            BinaryOperator(Symbol('x'), '>', NumericLiteral('5')))
         eq_(node.body.body, [
-            Assignment(Literal('8'), Symbol('x'))])
+            Assignment(NumericLiteral('8'), Symbol('x'))])
 
     def test_nested(self):
         p = if_statement()
@@ -196,12 +196,12 @@ class TestIfStatement():
         eq_(r, '')
         assert_is_instance(node, IfStatement)
         eq_(node.expression,
-            BinaryOperator(Symbol('x'), '>', Literal('5')))
+            BinaryOperator(Symbol('x'), '>', NumericLiteral('5')))
         eq_(node.body.body, [
-            Assignment(Literal('8'), Symbol('x')),
+            Assignment(NumericLiteral('8'), Symbol('x')),
             IfStatement(
-                BinaryOperator(Symbol('y'), '==', Literal('3')),
-                Block([Assignment(Literal('0'), Symbol('y'))])
+                BinaryOperator(Symbol('y'), '==', NumericLiteral('3')),
+                Block([Assignment(NumericLiteral('0'), Symbol('y'))])
             )])
 
 
@@ -211,11 +211,11 @@ def test_retrun():
 
     eq_(r, '')
     assert_is_instance(node, Return)
-    eq_(node.result, Literal('5'))
+    eq_(node.result, NumericLiteral('5'))
 
 def test_list_literal():
     p = literal()
 
     full_match(p, '[1,2,3]', ListLiteral(
-        [Literal(x) for x in ['1','2','3']]))
+        [NumericLiteral(x) for x in ['1','2','3']]))
 
