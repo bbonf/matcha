@@ -156,10 +156,6 @@ def generate_program(ast):
         (symbols, ';\n'.join(generate(x) for x in main))
 
 
-def bootstrap():
-    with open(os.path.join(os.path.dirname(__file__), 'bootstrap.java')) as f:
-        return f.read()
-
 def bootstrap_imports():
     return '\n'.join(
         'import %s;' % package for package in [

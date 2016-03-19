@@ -53,7 +53,7 @@ def generate_function(node):
 
     exclude_symbols = set([node.name]).union(args)
     return ('var {name} = function({args}) {{ {symbols}\n{body} }};'
-            'exports.{name} = {name}'.format(
+            'exports.{name} = {name};'.format(
                 name=node.name, args=join_arguments(node.args),
                 symbols=generate_block_symbols(node, exclude=exclude_symbols),
                 body=body))
@@ -102,9 +102,7 @@ def generate_symbol(node):
     return node.name
 
 def generate_import(node):
-    return "var %s = require('./%s.js');" % (
-        node.name.name, node.name.name)
-
+    return ''
 
 def generate(node):
     generators = {
@@ -126,8 +124,3 @@ def generate(node):
         return generators[type(node)](node)
     except KeyError:
         raise RuntimeError('unknown node: %r' % (node,))
-
-
-def bootstrap():
-    with open(os.path.join(os.path.dirname(__file__), 'bootstrap.js')) as f:
-        return f.read()
